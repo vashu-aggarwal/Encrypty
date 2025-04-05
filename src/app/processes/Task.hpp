@@ -21,7 +21,7 @@ struct Task {
     //A rvalue reference (T&&) allows us to take ownership of temporary objects (rvalues) and avoid unnecessary copies.
     //Optimize performance in resource-heavy classes
 
-    Task::Task(fstream&& stream, Action act, string filePath) { //constructor 
+    Task(fstream&& stream, Action act, string filePath) { //constructor 
 
         f_stream = move(stream); //ownership is moved
         action = act; //encrypt ya decrypt

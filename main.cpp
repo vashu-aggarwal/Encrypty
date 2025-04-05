@@ -29,10 +29,10 @@ int main(int argc, char* argv[]) {
                     // fetch the path of the file   
                     string filePath = entry.path().string();
                     IO io(filePath);
-                    fstream f_stream = move(io.getFileStream());
+                    fstream f_stream = std::move(io.getFileStream());
 
                     if (f_stream.is_open()) {
-                        Action taskAction = (action == "ENCRYPT") ? Action::ENCRYPT : Action::DECRYPT;
+                        Action taskAction = (action == "ENCRYPT" || action=="encrypt") ? Action::ENCRYPT : Action::DECRYPT;
                         // Create a unique pointer for the task so that it can be passed ahead in the Queue.
                         auto task = make_unique<Task>(move(f_stream), taskAction, filePath); //constructor of task
 

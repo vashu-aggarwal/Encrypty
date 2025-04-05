@@ -1,12 +1,13 @@
 #include "Cryption.hpp"
 #include "../processes/Task.hpp"
 #include "../fileHandling/ReadEnv.cpp"
+
 using namespace std;
 int executeCryption(const string& taskData) {
     Task task = Task::fromString(taskData); //static method class dependent
     ReadEnv env; //object to read
     string envKey = env.getenv(); //"12345" in .env
-    int key = stoi(envKey);// now //12345
+    int key = std::stoi(envKey);// now //12345
     if (task.action == Action::ENCRYPT) {
         char ch;
         while (task.f_stream.get(ch)) { //char by char
