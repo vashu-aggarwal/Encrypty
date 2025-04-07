@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             // All files are read now execute the task
-            processManagement.executeTasks();
+            // processManagement.executeTasks();
         } else {
             cout << "Invalid directory path!" << endl;
         }

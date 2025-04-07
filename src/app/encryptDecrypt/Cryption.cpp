@@ -1,13 +1,15 @@
 #include "Cryption.hpp"
 #include "../processes/Task.hpp"
 #include "../fileHandling/ReadEnv.cpp"
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
 int executeCryption(const string& taskData) {
     Task task = Task::fromString(taskData); //static method class dependent
     ReadEnv env; //object to read
     string envKey = env.getenv(); //"12345" in .env
-    int key = std::stoi(envKey);// now //12345
+    int key = stoi(envKey);// now //12345
     if (task.action == Action::ENCRYPT) {
         char ch;
         while (task.f_stream.get(ch)) { //char by char
@@ -36,5 +38,10 @@ int executeCryption(const string& taskData) {
         }
         task.f_stream.close();
     }
+
+    time_t t = std::time(nullptr);
+    tm* now = std::localtime(&t);
+    cout << "Exiting the encryption/decryption at: " << put_time(now, "%Y-%m-%d %H:%M:%S") << endl;
+   
     return 0;
 }

@@ -13,10 +13,32 @@ public:
     bool submitToQueue(unique_ptr<Task> task); //comes from <memory> package & Adds tasks to the queue
     void executeTasks(); //// Executes tasks in the queue
 
-private:
-    queue<unique_ptr<Task>> taskQueue;  // Queue to hold tasks
+private:   
+    // Queue to hold tasks
     //A FIFO (First-In-First-Out) structure for task scheduling.
     //Stores tasks dynamically using unique_ptr, preventing memory leaks.
+
+    //queue<unique_ptr<Task>> taskQueue;
+    //(Multiprocessing-->)queue is not gettimg shared among processes, causing infinite loop
+    //we will now create a shared memory struct
+
+    struct SharedMemory {
+        atomic<int>size;
+        char tasks[1000][256];
+        int front;
+        int rear;
+
+        void printSharedMemory() {
+            cout<<size<<endl;
+            cout<<front<<endl;
+            cout<<rear<<endl;
+        }
+
+    };
+    SharedMemory* sharedMem;
+    int shmFd;
+    const char* SHM_NAME = "/my_queue";
+
 };
 
 #endif
