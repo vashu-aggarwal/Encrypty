@@ -1,1 +1,8 @@
 .env
+test.txt
+output.bin
+output.txt
+mmap
+*.o
+*.out
+
