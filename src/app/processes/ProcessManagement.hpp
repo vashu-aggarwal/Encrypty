@@ -1,16 +1,17 @@
 #ifndef PROCESS_MANAGEMENT_HPP
 #define PROCESS_MANAGEMENT_HPP
-
+#include <atomic>
 #include "Task.hpp"
 #include <queue>
 #include <memory>
 #include <semaphore.h>
+#include <mutex>
+
 using namespace std;
 
 class ProcessManagement
 {
-  sem_t* itemsSemaphore;
-  sem_t* empty_semaphore; 
+
 public:
     ProcessManagement(); //just initialises queue-constructor
     ~ProcessManagement();
@@ -29,8 +30,8 @@ private:
     struct SharedMemory {
         atomic<int>size;
         char tasks[1000][256];
-        int front;
-        int rear;
+        atomic<int> front;
+        atomic<int> rear;
 
         void printSharedMemory() {
             cout<<size<<endl;
@@ -41,6 +42,10 @@ private:
     };
     SharedMemory* sharedMem;
     int shmFd;
+
+      sem_t* itemsSemaphore;
+      sem_t* empty_semaphore; 
+
     const char* SHM_NAME = "/my_queue";
     mutex queueLock;
 
