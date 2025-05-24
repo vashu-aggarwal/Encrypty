@@ -1,6 +1,5 @@
 test.txt
 output.bin
 output.txt
-mmap
 *.out
 
