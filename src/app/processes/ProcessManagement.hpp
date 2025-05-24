@@ -20,8 +20,8 @@ public:
 
 private:   
     // Queue to hold tasks
-    //A FIFO (First-In-First-Out) structure for task scheduling.
-    //Stores tasks dynamically using unique_ptr, preventing memory leaks.
+    //AOut) structure for task scheduling.
+    //Stores tasks FIFO (First-In-First- dynamically using unique_ptr, preventing memory leaks.
 
     //queue<unique_ptr<Task>> taskQueue;
     //(Multiprocessing-->)queue is not gettimg shared among processes, causing infinite loop

@@ -1,8 +1,9 @@
 .env
-test.txt
+test
 output.bin
 output.txt
 mmap
 *.o
 *.out
+
 
