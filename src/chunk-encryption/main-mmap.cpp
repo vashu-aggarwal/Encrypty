@@ -62,14 +62,18 @@ void process_chunk(AESContext* aes, unsigned char* data, size_t len) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <encrypt|decrypt> <in> <out> [threads]\n";
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <encrypt|decrypt> <in>\n";
         return 1;
     }
     bool encrypt = (std::strcmp(argv[1], "encrypt") == 0);
     const char* inpath  = argv[2];
-    const char* outpath = argv[3];
-    size_t num_threads = (argc >= 5 ? std::stoul(argv[4]) : std::thread::hardware_concurrency());
+    const char* outpath;
+    if(strcmp(argv[1], "encrypt") == 0){
+        outpath="./out.bin";
+    }else   
+        outpath="out.txt";
+    size_t num_threads = std::thread::hardware_concurrency();
 
     init_openssl();
 
