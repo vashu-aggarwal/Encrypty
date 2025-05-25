@@ -1,47 +1,57 @@
 #include "Cryption.hpp"
 #include "../processes/Task.hpp"
 #include "../fileHandling/ReadEnv.cpp"
-#include <ctime>
-#include <iomanip>
+
+#include <sodium.h>
+#include <vector>
+#include <cstring>
+#include <iostream>
 
 using namespace std;
+
 int executeCryption(const string& taskData) {
-    Task task = Task::fromString(taskData); //static method class dependent
-    ReadEnv env; //object to read
-    string envKey = env.getenv(); //"12345" in .env
-    int key = stoi(envKey);// now //12345
-    if (task.action == Action::ENCRYPT) {
-        char ch;
-        while (task.f_stream.get(ch)) { //char by char
-
-            //hashing: divide by 256--> rem between 0 to 255
-            //A= 68 key=12345, so (68+12345)%256
-            ch = (ch + key) % 256;
-
-            //seek pointer reads 0 index and advances to 1st index, so used -1 to get it at 0
-            //hello world
-            //seek advanced to e, so -1, now at h
-            //so, cur position is of h's hashing
-            //eg: hello--> 8ello
-            task.f_stream.seekp(-1, ios::cur);
-            task.f_stream.put(ch);
-        }
-        task.f_stream.close();
-    }
-    else 
-    {
-        char ch;
-        while (task.f_stream.get(ch)) {
-            ch = (ch - key + 256) % 256;
-            task.f_stream.seekp(-1, ios::cur);
-            task.f_stream.put(ch);
-        }
-        task.f_stream.close();
+    if (sodium_init() < 0) {
+        cerr << "Failed to initialize libsodium" << endl;
+        return 1;
     }
 
-    time_t t = std::time(nullptr);
-    tm* now = std::localtime(&t);
-    cout << "Exiting the encryption/decryption at: " << put_time(now, "%Y-%m-%d %H:%M:%S") << endl;
-   
+    Task task = Task::fromString(taskData);
+    ReadEnv env;
+    string rawKey = env.getenv();  // Get key from .env
+
+    if (rawKey.size() < crypto_stream_chacha20_KEYBYTES) {
+        cerr << "Key too short, must be at least 32 bytes" << endl;
+        return 1;
+    }
+
+    // Use first 32 bytes of rawKey as key
+    unsigned char key[crypto_stream_chacha20_KEYBYTES];
+    memcpy(key, rawKey.data(), crypto_stream_chacha20_KEYBYTES);
+
+    // Use fixed nonce (24 bytes for ChaCha20 in libsodium)
+    unsigned char nonce[crypto_stream_chacha20_NONCEBYTES] = {0};
+    // You can make nonce random and store it with the file for real security!
+
+    // Read entire file content into a buffer
+    task.f_stream.seekg(0, ios::end);
+    size_t fileSize = task.f_stream.tellg();
+    task.f_stream.seekg(0, ios::beg);
+
+    vector<unsigned char> buffer(fileSize);
+    task.f_stream.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+    task.f_stream.close();
+
+    // Encrypt or decrypt: ChaCha20 xor is symmetric
+    crypto_stream_chacha20_xor(buffer.data(), buffer.data(), fileSize, nonce, key);
+
+    // Write back to the file (overwrite)
+    task.f_stream.open(task.filePath, ios::out | ios::binary | ios::trunc);
+    if (!task.f_stream.is_open()) {
+        cerr << "Failed to open file for writing" << endl;
+        return 1;
+    }
+    task.f_stream.write(reinterpret_cast<const char*>(buffer.data()), fileSize);
+    task.f_stream.close();
+
     return 0;
 }

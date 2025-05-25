@@ -1,5 +1,20 @@
-test.txt
+# Environment files (keep secrets out of repo)
+.env
+
+# Build artifacts
+*.o
+*.out
+encrypt_decrypt
+cryption
+mmap
+
+# Output/test files
 output.bin
 output.txt
-*.out
+test.txt
+test/
 
+# Editor/OS-specific files (optional but common)
+.vscode/
+.DS_Store
+Thumbs.db

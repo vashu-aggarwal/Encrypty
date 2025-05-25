@@ -21,10 +21,10 @@ CRYPTION_OBJ = $(CRYPTION_SRC:.cpp=.o)
 all: $(MAIN_TARGET) $(CRYPTION_TARGET)
 
 $(MAIN_TARGET): $(MAIN_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ -lsodium
 
 $(CRYPTION_TARGET): $(CRYPTION_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ -lsodium
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
