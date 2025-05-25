@@ -21,6 +21,12 @@ int main(int argc, char* argv[]) {
     cout << "Enter password: ";
     getline(cin, password);
 
+    cout << "yes for multithreading? (y/n): ";
+    char threadChoice;
+    cin >> threadChoice;
+    cin.ignore();
+    bool useMultithreading = (threadChoice == 'y' || threadChoice == 'Y');
+
     try {
         if (!fs::exists(directory) || !fs::is_directory(directory)) {
             cout << "❌ Invalid directory path!" << endl;
@@ -59,7 +65,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Proceed to encryption/decryption
-        ProcessManagement processManagement;
+        ProcessManagement processManagement(useMultithreading);
 
         for (const auto& entry : fs::recursive_directory_iterator(directory)) {
             if (entry.is_regular_file()) {

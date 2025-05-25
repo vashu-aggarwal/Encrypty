@@ -13,7 +13,7 @@ class ProcessManagement
 {
 
 public:
-    ProcessManagement(); //just initialises queue-constructor
+    ProcessManagement(bool useMultithreading = false); //just initialises queue-constructor
     ~ProcessManagement();
     bool submitToQueue(unique_ptr<Task> task); //comes from <memory> package & Adds tasks to the queue
     void executeTasks(); //// Executes tasks in the queue
@@ -48,6 +48,8 @@ private:
 
     const char* SHM_NAME = "/my_queue";
     mutex queueLock;
+
+    bool useMultithreading;
 
 };
 

@@ -12,7 +12,8 @@
 
 using namespace std;
 
-ProcessManagement::ProcessManagement() {
+ProcessManagement::ProcessManagement(bool useMultithreading)
+    : useMultithreading(useMultithreading) {
     itemsSemaphore = sem_open("/items_semaphore", O_CREAT, 0666, 0);
     empty_semaphore = sem_open("/empty_slots_semaphore", O_CREAT, 0666, 1000);
     // if (itemsSemaphore == SEM_FAILED || emptySlotsSemaphore == SEM_FAILED) {
@@ -52,20 +53,22 @@ bool ProcessManagement::submitToQueue(unique_ptr<Task> task) {
     lock.unlock();
     sem_post(itemsSemaphore);
 
-    int pid = fork();
-    if (pid < 0) {
-        return false;
-    } else if (pid > 0) {
-        cout << "Entering the parent process" << endl;
+    if (useMultithreading) {
+        std::thread thread_1(&ProcessManagement::executeTasks, this);
+        thread_1.detach();
     } else {
-        cout << "Entering the child process" << endl;
-        executeTasks();
-        cout << "Exiting the child process" << endl;
-        exit(0);
+        int pid = fork();
+        if (pid < 0) {
+            return false;
+        } else if (pid > 0) {
+            cout << "Entering the parent process" << endl;
+        } else {
+            cout << "Entering the child process" << endl;
+            executeTasks();
+            cout << "Exiting the child process" << endl;
+            exit(0);
+        }
     }
-    // std::thread thread_1(&ProcessManagement::executeTasks, this);
-    // //detach a thread and run parallely with new thread and only exit when all threads execute completely
-    // thread_1.detach();
     return true;
 } 
 
