@@ -13,6 +13,11 @@
 #include <cstring>
 #include <functional>
 #include "./utils/ThreadPool/thread_pool.h"
+#include <fstream>
+#include <filesystem>
+
+using namespace std;
+namespace fs = std::filesystem;
 
 static const unsigned char FIXED_KEY[32] = {
     0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
@@ -62,23 +67,61 @@ void process_chunk(AESContext* aes, unsigned char* data, size_t len) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <encrypt|decrypt> <in>\n";
+    
+    string inpath, action, password;
+    const string passwordFileName = ".password.txt";
+
+    cout << "Enter the input file path: ";
+    getline(cin, inpath);
+
+    cout << "Enter the action (encrypt/decrypt): ";
+    getline(cin, action);
+
+    cout << "Enter password: ";
+    getline(cin, password);
+
+    fs::path inputPath(inpath);
+    fs::path dir = inputPath.parent_path();
+
+    string passwordFilePath = (dir / passwordFileName).string();
+    const char* outpath;
+    bool encrypt = (action == "encrypt" || action == "ENCRYPT");
+    if (encrypt) {
+        // saved password in file
+        ofstream outFile(passwordFilePath);
+        if (!outFile) {
+            cout << "Failed to create password file!" << endl;
+            return 1;
+        }
+        outFile << password;
+        outFile.close();
+    } else if (action == "decrypt" || action == "DECRYPT") {
+        // reading and comparing the saved password
+        ifstream inFile(passwordFilePath);
+        if (!inFile) {
+            cout << "Password file not found, cannot decrypt!" << endl;
+            return 1;
+        }
+        string storedPassword;
+        getline(inFile, storedPassword);
+        inFile.close();
+        if (storedPassword != password) {
+            cout << "Incorrect password. Access denied!" << endl;
+            return 1;
+        }
+    } else {
+        cout << "Unknown action. Please use 'encrypt' or 'decrypt'." << endl;
         return 1;
     }
-    bool encrypt = (std::strcmp(argv[1], "encrypt") == 0);
-    const char* inpath  = argv[2];
-    const char* outpath;
-    if(strcmp(argv[1], "encrypt") == 0){
-        outpath="./out.bin";
-    }else   
-        outpath="out.txt";
+
+    fs::path outputPath = dir / (encrypt ? "mid.txt" : "out.txt");
+    outpath = outputPath.c_str();
     size_t num_threads = std::thread::hardware_concurrency();
 
     init_openssl();
 
     // input file descriptor
-    int fd_in = open(inpath, O_RDONLY);
+    int fd_in = open(inpath.c_str(), O_RDONLY);
     if (fd_in < 0) {
         perror("open input");
         return 1;
