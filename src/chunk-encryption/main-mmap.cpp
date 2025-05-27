@@ -15,6 +15,9 @@
 #include "./utils/ThreadPool/thread_pool.h"
 #include <fstream>
 #include <filesystem>
+#include <atomic>
+#include <chrono>
+#include "./utils/progress_utils.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -137,6 +140,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    std::cout << "Input file size: " << file_size << " bytes\n";
+
     //output file descriptor
     int fd_out = open(outpath, O_RDWR | O_CREAT | O_TRUNC, 0644);
     if (fd_out < 0) {
@@ -160,15 +165,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // Progress tracking
+    std::atomic<size_t> bytes_processed(0);
+    const size_t chunk = 16 * 1024 * 1024;  // 16 MB slices
+    auto start_time = std::chrono::steady_clock::now();
+
     // thread pool for parallel processing
     {
         ThreadPool pool(num_threads);
-        const size_t chunk = 16 * 1024 * 1024;  // 16 MB slices
         for (size_t off = 0; off < file_size; off += chunk) {
             size_t len = std::min(chunk, file_size - off);
-            // enqueue the task to the thread pool
-            // using a lambda function to capture the variables and passing them to the thread
-            pool.enqueue([=]() {
+            pool.enqueue([=, &bytes_processed, &start_time]() {
                 AESContext* aes = create_aes_context(encrypt);
                 auto src  = static_cast<unsigned char*>(in_map)  + off;
                 auto dst  = static_cast<unsigned char*>(out_map) + off;
@@ -176,9 +183,19 @@ int main(int argc, char* argv[]) {
                 process_chunk(aes, dst, len);
                 EVP_CIPHER_CTX_free(aes->ctx);
                 delete aes;
+                // Update progress
+                size_t processed = bytes_processed.fetch_add(len) + len;
+                // Print progress every 100MB or on last chunk
+                if (processed == file_size || processed / (100*1024*1024) != (processed-len) / (100*1024*1024)) {
+                    print_progress(processed, file_size, start_time,true);
+                }
             });
         }
+        // Wait for all threads to finish by letting ThreadPool go out of scope
     }
+    // Print 100% progress at the end
+    print_progress(file_size, file_size, start_time,true);
+    std::cout << std::endl;
 
     // unmap the files
     if (munmap(in_map,  file_size) < 0) 

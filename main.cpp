@@ -4,6 +4,9 @@
 #include <string>
 #include "./src/app/processes/ProcessManagement.hpp"
 #include "./src/app/processes/Task.hpp"
+#include "./src/chunk-encryption/utils/progress_utils.h"
+#include <atomic>
+#include <chrono>
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -64,6 +67,17 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        // Count total files to process
+        size_t total_files = 0;
+        for (const auto& entry : fs::recursive_directory_iterator(directory)) {
+            if (entry.is_regular_file() && entry.path().filename() != passwordFileName) {
+                ++total_files;
+            }
+        }
+        cout << "Total files to process: " << total_files << endl;
+        std::atomic<size_t> files_processed(0);
+        auto start_time = std::chrono::steady_clock::now();
+
         // Proceed to encryption/decryption
         ProcessManagement processManagement(useMultithreading);
 
@@ -85,8 +99,13 @@ int main(int argc, char* argv[]) {
                 } else {
                     cout << "❌ Unable to open file: " << filePath << endl;
                 }
+                // Update and print progress
+                size_t processed = files_processed.fetch_add(1) + 1;
+                print_progress(processed, total_files, start_time,false);
             }
         }
+        print_progress(total_files, total_files, start_time,false);
+        cout << endl;
 
         // Uncomment to run tasks
         // processManagement.executeTasks();

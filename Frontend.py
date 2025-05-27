@@ -92,7 +92,7 @@ class SingleFileWidget(QWidget):
 
         try:
             process = subprocess.Popen([
-                '../mmap', action, file, password
+                './mmap', action, file, password
             ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
             stdout, stderr = process.communicate()
@@ -294,7 +294,6 @@ if __name__ == "__main__":
             background-color: #ccc;
         }
     """)
-
 
 
 
