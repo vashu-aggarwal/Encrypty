@@ -6,7 +6,6 @@
 *.out
 encrypt_decrypt
 cryption
-mmap
 
 # Output/test files
 output.bin
